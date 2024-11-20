@@ -14,6 +14,7 @@ typedef enum {
   CHAR_PLUS,
   CHAR_MINUS,
   CHAR_TIMES,
+  CHAR_MOD,
   CHAR_SLASH,
   CHAR_LT,
   CHAR_GT,
@@ -26,6 +27,7 @@ typedef enum {
   CHAR_SINGLEQUOTE,
   CHAR_LPAR,
   CHAR_RPAR,
+  CHAR_DOUBLEQUOTE,
   CHAR_UNKNOWN
 } CharCode;
 

@@ -47,6 +47,15 @@ void skipComment() {
   }
 }
 
+void skipLineComment() {
+  while (currentChar != EOF && currentChar != '\n') {
+    readChar();
+  }
+  if (currentChar != EOF) {
+    readChar(); // Skip the newline character
+  }
+}
+
 Token *readIdentKeyword(void)
 {
   Token *token = makeToken(TK_IDENT, lineNo, colNo);
@@ -107,59 +116,67 @@ Token* readNumber(void) {
 }
 
 Token* readConstChar(void) {
-  Token* token = makeToken(TK_CHAR, lineNo, colNo);
+  int ln = lineNo;
+  int cn = colNo;
+  Token* token = makeToken(TK_CHAR, ln, cn);
 
-  // Read next character
-  readChar();
-
-  if (currentChar == -1) { // End of File
-    error(ERR_INVALIDCHARCONSTANT, token->lineNo, token->colNo);
-  } else {
-	switch(charCodes[currentChar]) {
-	// Escape character for Single Quote:
-	case CHAR_SINGLEQUOTE:
-		// Read next character
-		readChar();
-
-		if (charCodes[currentChar] == CHAR_SINGLEQUOTE) {
-		    token->string[0] = currentChar;
-
-		    readChar();
-		    if (charCodes[currentChar] == CHAR_SINGLEQUOTE) {
-		        token->string[1] = '\0';
-
-		        readChar();
-		        return token;
-		    } else {
-		        error(ERR_INVALIDCHARCONSTANT, token->lineNo, token->colNo);
-		    }
-
-		} else {
-			error(ERR_INVALIDCHARCONSTANT, token->lineNo, token->colNo);
-		}
-		break;
-	default:
-	    // Add the character to token string
-        token->string[0] = currentChar;
-
-		// Read next character
-		readChar();
-
-		switch(charCodes[currentChar]) {
-		case CHAR_SINGLEQUOTE:
-			// End token
-			token->string[1] = '\0';
-
-			readChar();
-			return token;
-		default:
-			error(ERR_INVALIDCHARCONSTANT, token->lineNo, token->colNo);
-			break;
-		}
-		break;
-	}
-
+  // Check if it's a string literal
+  if (charCodes[currentChar] == CHAR_DOUBLEQUOTE) {
+    token->tokenType = TK_STRING;
+    readChar(); // Skip opening quote
+    int count = 0;
+    
+    while (currentChar != EOF && charCodes[currentChar] != CHAR_DOUBLEQUOTE) {
+      if (count < MAX_IDENT_LEN) {
+        token->string[count++] = currentChar;
+      }
+      readChar();
+    }
+    
+    if (currentChar == EOF) {
+      error(ERR_INVALIDCHARCONSTANT, ln, cn);
+    } else {
+      token->string[count] = '\0';
+      readChar(); // Skip closing quote
+    }
+    return token;
   }
+
+  // Handle character literal
+  readChar(); // Skip opening quote
+  
+  if (currentChar == EOF) {
+    error(ERR_INVALIDCHARCONSTANT, ln, cn);
+    return token;
+  }
+
+  // Handle single quote escape
+  if (charCodes[currentChar] == CHAR_SINGLEQUOTE) {
+    readChar();
+    if (currentChar != EOF && charCodes[currentChar] == CHAR_SINGLEQUOTE) {
+      token->string[0] = '\'';
+      token->string[1] = '\0';
+      readChar();
+      if (charCodes[currentChar] == CHAR_SINGLEQUOTE) {
+        readChar();
+        return token;
+      }
+    }
+    error(ERR_INVALIDCHARCONSTANT, ln, cn);
+    return token;
+  }
+
+  // Regular character
+  token->string[0] = currentChar;
+  token->string[1] = '\0';
+  readChar();
+  
+  if (currentChar == EOF || charCodes[currentChar] != CHAR_SINGLEQUOTE) {
+    error(ERR_INVALIDCHARCONSTANT, ln, cn);
+    return token;
+  }
+  
+  readChar(); // Skip closing quote
   return token;
 }
 
@@ -195,9 +212,17 @@ Token *getToken(void)
     readChar();
     return token;
   case CHAR_SLASH:
-    // Token Slash
-    token = makeToken(SB_SLASH, lineNo, colNo);
     readChar();
+    if (currentChar == '/') {
+      skipLineComment();
+      return getToken();
+    } else {
+      token = makeToken(SB_SLASH, lineNo, colNo-1);
+      return token;
+    }
+  case CHAR_MOD:
+    token = makeToken(SB_MOD, lineNo, colNo);
+    readChar(); 
     return token;
   case CHAR_EQ:
     // Token Equal
@@ -316,6 +341,8 @@ Token *getToken(void)
     return token;
   case CHAR_SINGLEQUOTE:
     return readConstChar();
+  case CHAR_DOUBLEQUOTE:
+    return readConstChar();
   default:
     token = makeToken(TK_NONE, lineNo, colNo);
     error(ERR_INVALIDSYMBOL, lineNo, colNo);
@@ -341,6 +368,9 @@ void printToken(Token *token)
     break;
   case TK_NUMBER:
     printf("TK_NUMBER(%d)\n", token->value);
+    break;
+  case TK_STRING:
+    printf("TK_STRING(%s)\n", token->string);
     break;
   case TK_CHAR:
     printf("TK_CHAR(\'%s\')\n", token->string);
@@ -409,6 +439,9 @@ void printToken(Token *token)
   case KW_TO:
     printf("KW_TO\n");
     break;
+  case KW_STRING:
+    printf("KW_STRING\n");
+    break;
 
   case SB_SEMICOLON:
     printf("SB_SEMICOLON\n");
@@ -466,6 +499,9 @@ void printToken(Token *token)
     break;
   case SB_RSEL:
     printf("SB_RSEL\n");
+    break;
+  case SB_MOD:
+    printf("SB_MOD\n");
     break;
   }
 }
