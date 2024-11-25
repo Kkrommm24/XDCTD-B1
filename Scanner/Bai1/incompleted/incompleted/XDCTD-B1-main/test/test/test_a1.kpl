@@ -1,0 +1,12 @@
+PROGRAM SimpleTest;
+VAR
+    message: STRING;
+    num1, num2: INTEGER;
+
+// Testing single line comment
+BEGIN
+    // Variable assignments
+    message := "Hello";
+    num1 := 10;
+    num2 := num1 % 3;  // Should give 1
+END.
