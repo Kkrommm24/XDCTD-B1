@@ -1,0 +1,32 @@
+PROGRAM TestMultiAssign;
+
+VAR
+  x: INTEGER;
+  y: INTEGER;
+  z: INTEGER;
+  a: DOUBLE;
+  b: DOUBLE;
+  c: CHAR;
+
+BEGIN
+  x := 1;
+  y := 2;
+  z := 3;
+  a := 1.5;
+  b := 2.5;
+  c := 'A';
+
+  // Test multi-assignment
+  x, y, z := 4, 5, 6;  // Correct multi-assignment
+  a, b := b, a;        // Correct multi-assignment with type casting (integer to double allowed)
+  
+  // Test type mismatch
+  // x, y, z := 1.5, 2.5, 3.5;  // Error: type mismatch (double to integer not allowed)
+  
+  // Test number of variables mismatch
+  // x, y := 1, 2, 3;  // Error: number of variables mismatch
+  
+  // Test constant on the left-hand side
+  // 1, 2 := x, y;  // Error: left-hand side contains constants
+
+END.
