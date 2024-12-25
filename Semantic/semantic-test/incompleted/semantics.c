@@ -161,4 +161,14 @@ void checkTypeEquality(Type* type1, Type* type2) {
   error(ERR_TYPE_INCONSISTENCY, currentToken->lineNo, currentToken->colNo);
 }
 
+void checkMultiAssignLength(int leftCount, int rightCount) {
+  if (leftCount != rightCount) {
+    error(ERR_INVALID_MULTI_ASSIGNMENT_LENGTH, currentToken->lineNo, currentToken->colNo);
+  }
+}
 
+void checkMultipleAssign(Type** lvalueTypes, Type** exprTypes, int count) {
+  for (int i = 0; i < count; i++) {
+    checkTypeEquality(lvalueTypes[i], exprTypes[i]);
+  }
+}

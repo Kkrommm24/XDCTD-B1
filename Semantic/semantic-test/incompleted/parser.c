@@ -13,6 +13,8 @@
 #include "error.h"
 #include "debug.h"
 
+#define MAX_MULTI_ASSIGN 10
+
 Token *currentToken;
 Token *lookAhead;
 
@@ -380,7 +382,7 @@ void compileStatements(void) {
 void compileStatement(void) {
   switch (lookAhead->tokenType) {
   case TK_IDENT:
-    compileAssignSt();
+    compileMultiAssignSt();
     break;
   case KW_CALL:
     compileCallSt();
@@ -439,6 +441,41 @@ void compileAssignSt(void) {
   eat(SB_ASSIGN);
   RType = compileExpression();
   checkTypeEquality(LType, RType);
+}
+
+void compileMultiAssignSt(void) {
+  // Arrays to store types for semantic checking
+  Type* lvalueTypes[MAX_MULTI_ASSIGN];
+  Type* exprTypes[MAX_MULTI_ASSIGN];
+  int lCount = 0;
+  int rCount = 0;
+
+  lvalueTypes[lCount] = compileLValue();
+  lCount++;
+
+  // Parse left side variables and store their types
+  while (lookAhead->tokenType == SB_COMMA)
+  {
+    eat(SB_COMMA);
+    lvalueTypes[lCount] = compileLValue();
+    lCount++;
+  }
+
+  eat(SB_ASSIGN);
+
+  exprTypes[rCount] = compileExpression();
+  rCount++;
+
+  // Parse right side expressions and store their types  
+  while (lookAhead->tokenType == SB_COMMA)
+  {
+    eat(SB_COMMA);
+    exprTypes[rCount] = compileExpression();
+    rCount++;
+  }
+
+  checkMultiAssignLength(lCount, rCount);
+  checkMultipleAssign(lvalueTypes, exprTypes, lCount);
 }
 
 void compileCallSt(void) {

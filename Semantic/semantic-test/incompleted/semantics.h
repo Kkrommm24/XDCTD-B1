@@ -23,5 +23,7 @@ void checkCharType(Type* type);
 void checkArrayType(Type* type);
 void checkBasicType(Type* type);
 void checkTypeEquality(Type* type1, Type* type2);
+void checkMultipleAssign(Type** lvalueTypes, Type** exprTypes, int count);
+void checkMultiAssignLength(int leftCount, int rightCount);
 
 #endif
