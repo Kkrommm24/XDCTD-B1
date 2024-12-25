@@ -1,0 +1,4 @@
+Program STEST
+    Var X : Int
+    Var Y : Int
+    Var Z : Int  
