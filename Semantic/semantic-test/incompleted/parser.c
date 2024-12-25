@@ -636,7 +636,7 @@ void compileCondition(void) {
 
 Type* compileExpression(void) {
   Type* type;
-  
+  Type* type1;
   switch (lookAhead->tokenType) {
   case SB_PLUS:
     eat(SB_PLUS);
@@ -647,6 +647,17 @@ Type* compileExpression(void) {
     eat(SB_MINUS);
     type = compileExpression2();
     checkIntType(type);
+    break;
+  case KW_SUM:
+    eat(KW_SUM);
+    type = compileExpression();
+    checkIntType(type);
+    
+    while (lookAhead->tokenType == SB_COMMA) {
+      eat(SB_COMMA);
+      type1 = compileExpression();
+      checkIntType(type1);
+    }
     break;
   default:
     type = compileExpression2();
